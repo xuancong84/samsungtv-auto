@@ -1,7 +1,7 @@
 #!/bin/bash
 
-ON_TIME="08:30:00"
-OFF_TIME="18:30:00"
+ON_TIME="09:00:00"
+OFF_TIME="18:00:00"
 
 cd "`dirname $0`"
 
@@ -41,6 +41,14 @@ not_work_hour() {
 	return 0
 }
 
+is_working_day() {
+	dow=$(date +%u)
+	if [[ 12345 == *$dow* ]]; then
+		return 0
+	fi
+	return 1
+}
+
 start() {
 	./tv-control.py 3 'https://b2b.mindline.sg/ddr/'
 	./tv-control.py 2 'https://b2b.mindline.sg/ddr2/'
@@ -58,13 +66,17 @@ if [ $# -ge 1 ]; then
 	exit
 fi
 
+if ! ./tv-control.py 1 is_tv_on && ! not_work_hour ; then
+	if is_working_day; then
+		start
+	fi
+fi
 
 ini=yes
 while :; do
 	if [ $ini == no ] || not_work_hour; then
 		sleep_until $ON_TIME
-		dow=$(date +%u)
-		if [[ 12345 == *$dow* ]]; then
+		if is_working_day; then
 			start
 		fi
 		ini=no
